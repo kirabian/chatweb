@@ -29,6 +29,8 @@
             background-color: #ffffff;
             font-size: 1rem;
             position: relative;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         .message.sent {
             align-self: flex-end;
@@ -63,6 +65,12 @@
         #message-input {
             font-size: 1rem;
             height: 50px;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
         }
     </style>
 </head>
@@ -239,7 +247,7 @@
                             messageElement.classList.add("message");
                             messageElement.innerHTML = `
                                 <strong>${messageData.from}</strong>
-                                ${messageData.text ? `<p>${messageData.text}</p>` : ''}
+                                ${formatMessageContent(messageData.text)}
                                 ${messageData.audioURL ? `<audio controls src="${messageData.audioURL}"></audio>` : ''}
                                 ${messageData.from === localStorage.getItem("username") || localStorage.getItem("username") === "bian" ? 
                                     `<button class="delete-btn" data-id="${data.key}">Delete</button>` : ''}
@@ -253,6 +261,25 @@
                                 });
                             }
                         });
+                    }
+
+                    // Fungsi untuk memformat konten pesan
+                    function formatMessageContent(text) {
+                        if (!text) return '';
+                        const codeRegex = /```([\s\S]*?)```/g;
+                        return text.replace(codeRegex, (match, code) => {
+                            return `<pre><code>${escapeHtml(code)}</code></pre>`;
+                        });
+                    }
+
+                    // Fungsi untuk menghindari XSS
+                    function escapeHtml(unsafe) {
+                        return unsafe
+                            .replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
                     }
 
                     // Fungsi untuk menghapus pesan
