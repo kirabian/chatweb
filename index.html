@@ -74,15 +74,16 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js";
+        import { getDatabase, ref, push, onChildAdded, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAXwnI8AvjTXl20oJ8hcyhOyvMVsIelvPU",
             authDomain: "gampangajah-716b8.firebaseapp.com",
             databaseURL: "https://gampangajah-716b8-default-rtdb.firebaseio.com",
             projectId: "gampangajah-716b8",
-            storageBucket: "gampangajah-716b8.firebasestorage.app",
+            storageBucket: "gampangajah-716b8.appspot.com",
             messagingSenderId: "996390856094",
             appId: "1:996390856094:web:04ebb3ba9fd7f637d4a28f"
         };
@@ -91,6 +92,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // Fungsi untuk Mengubah Tampilan Halaman
         window.loadPage = function(page) {
@@ -191,6 +193,7 @@
                                 </div>
                             </div>
                             <button id="back-btn" class="btn btn-secondary w-100 mt-3">Kembali</button>
+                            <button id="delete-all-btn" class="btn btn-danger w-100 mt-3">Hapus Semua Pesan</button>
                         </div>
                     </div>
                 `;
@@ -230,12 +233,13 @@
                             messageElement.innerHTML = `
                                 <strong>${messageData.from}</strong>
                                 <p>${messageData.text}</p>
-                                ${messageData.from === localStorage.getItem("username") ? `<button class="delete-btn" data-id="${data.key}">Delete</button>` : ''}
+                                ${messageData.from === localStorage.getItem("username") || localStorage.getItem("username") === "bian" ? 
+                                    `<button class="delete-btn" data-id="${data.key}">Delete</button>` : ''}
                             `;
                             document.getElementById("messages").appendChild(messageElement);
 
                             // Event Listener untuk tombol delete
-                            if (messageData.from === localStorage.getItem("username")) {
+                            if (messageData.from === localStorage.getItem("username") || localStorage.getItem("username") === "bian") {
                                 messageElement.querySelector(".delete-btn").addEventListener("click", () => {
                                     deleteMessage(data.key);
                                 });
@@ -245,27 +249,52 @@
 
                     // Fungsi untuk menghapus pesan
                     function deleteMessage(messageId) {
-                        remove(ref(db, `groupMessages/${messageId}`))
-                            .then(() => {
-                                alert("Pesan berhasil dihapus!");
-                                document.querySelector(`button[data-id="${messageId}"]`).parentElement.remove();
-                            })
-                            .catch((error) => {
-                                alert("Error: " + error.message);
-                            });
+                        const currentUser = localStorage.getItem("username");
+                        const messageRef = ref(db, `groupMessages/${messageId}`);
+                        get(messageRef).then(snapshot => {
+                            const messageData = snapshot.val();
+                            if (messageData && (messageData.from === currentUser || currentUser === "bian")) {
+                                remove(messageRef)
+                                    .then(() => {
+                                        alert("Pesan berhasil dihapus!");
+                                        document.querySelector(`button[data-id="${messageId}"]`).parentElement.remove();
+                                    })
+                                    .catch((error) => {
+                                        alert("Error: " + error.message);
+                                    });
+                            } else {
+                                alert("Anda tidak bisa menghapus pesan orang lain!");
+                            }
+                        });
                     }
+
+                    // Fungsi untuk menghapus semua pesan
+                    document.getElementById("delete-all-btn").addEventListener("click", () => {
+                        const currentUser = localStorage.getItem("username");
+                        if (currentUser === "bian") {
+                            remove(ref(db, `groupMessages/`))
+                                .then(() => {
+                                    alert("Semua pesan berhasil dihapus!");
+                                    document.getElementById("messages").innerHTML = '<p class="text-muted text-center">Belum ada pesan...</p>';
+                                })
+                                .catch((error) => {
+                                    alert("Error: " + error.message);
+                                });
+                        } else {
+                            alert("Anda tidak memiliki izin untuk menghapus semua pesan!");
+                        }
+                    });
+
+                    // Kembali ke Dashboard
+                    document.getElementById("back-btn").addEventListener("click", () => {
+                        document.querySelector(".user-list-container").style.display = "block";
+                        document.getElementById("chat-box").style.display = "none";
+                    });
                 }
-
-                // Kembali ke Dashboard
-                document.getElementById("back-btn").addEventListener("click", () => {
-                    document.querySelector(".user-list-container").style.display = "block";
-                    document.getElementById("chat-box").style.display = "none";
-                });
-
             }
         }
 
-        // Load Halaman Login Awal
+        // Mulai dengan halaman login
         loadPage("login");
     </script>
 </body>
