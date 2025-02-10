@@ -94,6 +94,15 @@
         const db = getDatabase(app);
         const storage = getStorage(app);
 
+        // Daftar kata yang dilarang
+        const bannedWords = ["kontol", "memek", "tolol", "goblok"];
+        const bannedUsernames = ["a", "b", "c", "d"];
+
+        // Fungsi untuk memeriksa apakah username atau pesan mengandung kata yang dilarang
+        function containsBannedWords(text) {
+            return bannedWords.some(word => text.toLowerCase().includes(word));
+        }
+
         // Fungsi untuk Mengubah Tampilan Halaman
         window.loadPage = function(page) {
             const content = document.getElementById("content");
@@ -118,6 +127,11 @@
                     e.preventDefault();
                     const username = document.getElementById("login-username").value;
                     const password = document.getElementById("login-password").value;
+
+                    if (bannedUsernames.includes(username.toLowerCase()) || username.length === 1) {
+                        alert("Username tidak valid!");
+                        return;
+                    }
 
                     try {
                         const userSnapshot = await get(ref(db, `users/${username}`));
@@ -158,6 +172,11 @@
                     const username = document.getElementById("register-username").value;
                     const email = document.getElementById("register-email").value;
                     const password = document.getElementById("register-password").value;
+
+                    if (bannedUsernames.includes(username.toLowerCase()) || username.length === 1) {
+                        alert("Username tidak valid!");
+                        return;
+                    }
 
                     try {
                         await createUserWithEmailAndPassword(auth, email, password);
@@ -218,6 +237,11 @@
                         const messageInput = document.getElementById("message-input");
                         const message = messageInput.value.trim();
                         const fromUsername = localStorage.getItem("username");
+
+                        if (containsBannedWords(message)) {
+                            alert("Pesan mengandung kata yang dilarang!");
+                            return;
+                        }
 
                         if (message !== "") {
                             push(ref(db, `groupMessages/`), {
