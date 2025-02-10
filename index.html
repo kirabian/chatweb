@@ -378,7 +378,39 @@
                             const totalUsers = Object.keys(users).length;
                             const onlineUsers = Object.values(users).filter(user => user.online).length;
                             userStatsElement.innerHTML = `Total Users: ${totalUsers}, Online Users: ${onlineUsers}`;
+                            userStatsElement.innerHTML += `<ul class="list-group mt-3">`;
+                            for (const username in users) {
+                                userStatsElement.innerHTML += `
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        ${username}
+                                        ${localStorage.getItem("username") === "bian" ? `<button class="btn btn-danger btn-sm ban-btn" data-username="${username}">Ban</button>` : ''}
+                                    </li>
+                                `;
+                            }
+                            userStatsElement.innerHTML += `</ul>`;
+
+                            // Event Listener untuk tombol ban
+                            document.querySelectorAll(".ban-btn").forEach(button => {
+                                button.addEventListener("click", () => {
+                                    const usernameToBan = button.getAttribute("data-username");
+                                    banUser(usernameToBan);
+                                });
+                            });
                         });
+                    }
+
+                    // Fungsi untuk ban user
+                    function banUser(username) {
+                        if (confirm(`Apakah Anda yakin ingin ban user ${username}?`)) {
+                            update(ref(db, `users/${username}`), { banned: true })
+                                .then(() => {
+                                    alert(`User ${username} berhasil di-ban!`);
+                                    updateUserStats();
+                                })
+                                .catch((error) => {
+                                    alert("Error: " + error.message);
+                                });
+                        }
                     }
 
                     // Typing notification
