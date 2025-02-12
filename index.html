@@ -97,7 +97,7 @@
             const username = localStorage.getItem("username");
             const group = localStorage.getItem("group");
             if (!message) return;
-            push(ref(db, `messages/${group}`), { user: username, text: message });
+            push(ref(db, `messages/${group}`), { user: username, text: message, timestamp: Date.now() });
             document.getElementById("message").value = "";
 
             // Check for mentions and notify admins
@@ -108,6 +108,7 @@
 
         function listenMessages() {
             const group = localStorage.getItem("group");
+            const lastReadTimestamp = localStorage.getItem(`lastRead_${group}`) || 0;
             onChildAdded(ref(db, `messages/${group}`), snapshot => {
                 const msg = snapshot.val();
                 const chatBox = document.getElementById("chatBox");
@@ -121,13 +122,16 @@
                     navigator.vibrate(200);
                 }
 
-                // Show notification for new message
-                if (Notification.permission === "granted") {
+                // Show notification for new message if it's newer than the last read timestamp
+                if (Notification.permission === "granted" && msg.timestamp > lastReadTimestamp) {
                     new Notification(`Pesan baru dari ${msg.user}`, {
                         body: msg.text,
                         icon: 'https://example.com/icon.png' // Replace with your icon URL
                     });
                 }
+
+                // Update last read timestamp
+                localStorage.setItem(`lastRead_${group}`, Date.now());
             });
         }
 
