@@ -149,6 +149,10 @@
         }
 
         window.logout = function() {
+            const group = localStorage.getItem("group");
+            if (group) {
+                localStorage.setItem(`lastRead_${group}`, Date.now());
+            }
             localStorage.removeItem("username");
             localStorage.removeItem("group");
             location.reload();
