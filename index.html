@@ -52,8 +52,15 @@
             if (users.includes(username) && password === "123456") {
                 localStorage.setItem("username", username);
                 showGroupSelection(username);
+                requestNotificationPermission();
             } else {
                 alert("Login gagal! Cek email dan password");
+            }
+        }
+
+        function requestNotificationPermission() {
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission();
             }
         }
 
@@ -112,6 +119,14 @@
                 // Vibrate on new message
                 if (navigator.vibrate) {
                     navigator.vibrate(200);
+                }
+
+                // Show notification for new message
+                if (Notification.permission === "granted") {
+                    new Notification(`Pesan baru dari ${msg.user}`, {
+                        body: msg.text,
+                        icon: 'https://example.com/icon.png' // Replace with your icon URL
+                    });
                 }
             });
         }
