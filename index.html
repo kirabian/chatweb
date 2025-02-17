@@ -36,7 +36,8 @@
             "Wulan": ["Rohmat", "adit"],
             "Putra": ["najla", "Annisya"],
             "Agung": ["putri", "ojan"],
-            "galih": ["chika", "mutya"]
+            "galih": ["chika", "mutya"],
+            "ketua": admins // Grup khusus ketua
         };
 
         window.login = function () {
@@ -77,6 +78,14 @@
                     groupSelect.appendChild(option);
                 }
             });
+
+            // Tambahkan grup khusus ketua jika user adalah ketua
+            if (admins.includes(username)) {
+                const option = document.createElement("option");
+                option.value = "ketua";
+                option.text = "Grup Ketua";
+                groupSelect.appendChild(option);
+            }
         }
 
         window.selectGroup = function () {
@@ -155,7 +164,6 @@
                 console.error("Error deleting message:", error);
             });
         }
-
 
         function notifyAdmins(group) {
             const groupAdmins = groups[group] || [];
